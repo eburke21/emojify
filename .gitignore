@@ -1,0 +1,10 @@
+data/processed/
+cache.sqlite
+*.npz
+__pycache__/
+*.pyc
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
