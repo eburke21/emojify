@@ -1,0 +1,284 @@
+# emojify evaluation dataset — 50 test cases
+# Scoring: 3 (perfect), 2 (reasonable), 1 (miss)
+#
+# text_to_emoji: 30 cases across 10 categories (3 per category)
+# emoji_to_text: 20 cases across 10 categories (2 per category)
+
+text_to_emoji:
+  # --- greeting (3 cases) ---
+  - input_text: "happy birthday"
+    expected_emoji: ["🎂", "🎉", "🥳"]
+    category: greeting
+
+  - input_text: "good morning"
+    expected_emoji: ["☀️", "🌅", "🌞"]
+    category: greeting
+
+  - input_text: "welcome home"
+    expected_emoji: ["🏠", "🏡", "👋"]
+    category: greeting
+
+  # --- emotion (3 cases) ---
+  - input_text: "I'm so tired"
+    expected_emoji: ["😴", "💤", "😩"]
+    category: emotion
+
+  - input_text: "feeling lonely tonight"
+    expected_emoji: ["😔", "😢", "🥺"]
+    category: emotion
+
+  - input_text: "I'm scared"
+    expected_emoji: ["😨", "😱", "😰"]
+    category: emotion
+
+  # --- activity (3 cases) ---
+  - input_text: "let's go to the beach"
+    expected_emoji: ["🏖️", "🌊", "☀️"]
+    category: activity
+
+  - input_text: "going for a run"
+    expected_emoji: ["🏃", "👟", "🏃‍♂️"]
+    category: activity
+
+  - input_text: "reading a good book"
+    expected_emoji: ["📖", "📚", "🤓"]
+    category: activity
+
+  # --- reaction (3 cases) ---
+  - input_text: "that's hilarious"
+    expected_emoji: ["😂", "🤣", "💀"]
+    category: reaction
+
+  - input_text: "wow that's amazing"
+    expected_emoji: ["🤩", "😮", "✨"]
+    category: reaction
+
+  - input_text: "that's disgusting"
+    expected_emoji: ["🤢", "🤮", "😷"]
+    category: reaction
+
+  # --- celebration (3 cases) ---
+  - input_text: "congratulations on the promotion"
+    expected_emoji: ["🎉", "🥂", "👏"]
+    category: celebration
+
+  - input_text: "we won the championship"
+    expected_emoji: ["🏆", "🥇", "🎉"]
+    category: celebration
+
+  - input_text: "happy new year"
+    expected_emoji: ["🎆", "🎉", "🥂"]
+    category: celebration
+
+  # --- frustration (3 cases) ---
+  - input_text: "stuck in traffic again"
+    expected_emoji: ["🚗", "😤", "⏰"]
+    category: frustration
+
+  - input_text: "oh great, another meeting"
+    expected_emoji: ["😒", "🙄", "😤"]
+    category: frustration
+
+  - input_text: "my computer crashed and I lost everything"
+    expected_emoji: ["💻", "😭", "💔"]
+    category: frustration
+
+  # --- food (3 cases) ---
+  - input_text: "pizza for dinner"
+    expected_emoji: ["🍕", "🍽️", "😋"]
+    category: food
+
+  - input_text: "I need my morning coffee"
+    expected_emoji: ["☕", "🌅", "😴"]
+    category: food
+
+  - input_text: "let's get sushi"
+    expected_emoji: ["🍣", "🍱", "🇯🇵"]
+    category: food
+
+  # --- work (3 cases) ---
+  - input_text: "working from home today"
+    expected_emoji: ["🏠", "💻", "☕"]
+    category: work
+
+  - input_text: "just deployed to production at 2am"
+    expected_emoji: ["🚀", "💻", "🌙"]
+    category: work
+
+  - input_text: "debugging this code all day"
+    expected_emoji: ["🐛", "💻", "🔍"]
+    category: work
+
+  # --- weather (3 cases) ---
+  - input_text: "it's freezing outside"
+    expected_emoji: ["🥶", "❄️", "🧊"]
+    category: weather
+
+  - input_text: "beautiful sunny day"
+    expected_emoji: ["☀️", "🌞", "😎"]
+    category: weather
+
+  - input_text: "it's pouring rain"
+    expected_emoji: ["🌧️", "☔", "💧"]
+    category: weather
+
+  # --- achievement (3 cases) ---
+  - input_text: "just finished a marathon"
+    expected_emoji: ["🏃", "🏅", "💪"]
+    category: achievement
+
+  - input_text: "got my degree"
+    expected_emoji: ["🎓", "📜", "🎉"]
+    category: achievement
+
+  - input_text: "that's fire"
+    expected_emoji: ["🔥", "💯", "😎"]
+    category: achievement
+
+
+emoji_to_text:
+  # --- celebration (2 cases) ---
+  - input_emoji: "🎉🍾🥂"
+    acceptable_interpretations:
+      - "Let's celebrate!"
+      - "Cheers!"
+      - "Time to party and celebrate"
+    category: celebration
+
+  - input_emoji: "🎂🎉🎁"
+    acceptable_interpretations:
+      - "Happy birthday!"
+      - "Birthday celebration with presents"
+    category: celebration
+
+  # --- emotion (2 cases) ---
+  - input_emoji: "😭💔"
+    acceptable_interpretations:
+      - "Heartbroken"
+      - "So sad"
+      - "Crying over a broken heart"
+    category: emotion
+
+  - input_emoji: "😊❤️"
+    acceptable_interpretations:
+      - "Feeling happy and loved"
+      - "Love and happiness"
+      - "Sending love"
+    category: emotion
+
+  # --- travel (2 cases) ---
+  - input_emoji: "✈️🌴🏖️"
+    acceptable_interpretations:
+      - "Going on vacation"
+      - "Beach trip"
+      - "Flying to a tropical destination"
+    category: travel
+
+  - input_emoji: "🏃✈️⏰"
+    acceptable_interpretations:
+      - "Running late for a flight"
+      - "Rushing to catch a plane"
+      - "In a hurry to the airport"
+    category: travel
+
+  # --- contemplation (2 cases) ---
+  - input_emoji: "🤔💭"
+    acceptable_interpretations:
+      - "Thinking about it"
+      - "Hmm, let me think"
+      - "Deep in thought"
+    category: contemplation
+
+  - input_emoji: "😴💤🛏️"
+    acceptable_interpretations:
+      - "Going to sleep"
+      - "Time for bed"
+      - "So sleepy"
+    category: contemplation
+
+  # --- approval (2 cases) ---
+  - input_emoji: "🔥💯👌"
+    acceptable_interpretations:
+      - "That's amazing"
+      - "Perfect"
+      - "Absolutely fire"
+    category: approval
+
+  - input_emoji: "👍😊✨"
+    acceptable_interpretations:
+      - "That's great!"
+      - "Awesome, well done"
+      - "Sounds good"
+    category: approval
+
+  # --- food (2 cases) ---
+  - input_emoji: "🍕🍺📺"
+    acceptable_interpretations:
+      - "Pizza and beer while watching TV"
+      - "Chill night with food and drinks"
+    category: food
+
+  - input_emoji: "🍕🍺📺🏈"
+    acceptable_interpretations:
+      - "Watching football with pizza and beer"
+      - "Game day snacks"
+      - "Sports night with food"
+    category: food
+
+  # --- work (2 cases) ---
+  - input_emoji: "💻☕🏠"
+    acceptable_interpretations:
+      - "Working from home with coffee"
+      - "Remote work day"
+    category: work
+
+  - input_emoji: "🚀🔥💯"
+    acceptable_interpretations:
+      - "Just shipped something amazing"
+      - "Launch was a huge success"
+      - "On fire, nailed it"
+    category: work
+
+  # --- weather (2 cases) ---
+  - input_emoji: "🌧️☕📖"
+    acceptable_interpretations:
+      - "Rainy day reading with coffee"
+      - "Cozy day inside with a book"
+    category: weather
+
+  - input_emoji: "☀️🌊🏄"
+    acceptable_interpretations:
+      - "Sunny day surfing at the beach"
+      - "Going surfing"
+      - "Perfect beach day"
+    category: weather
+
+  # --- sarcasm (2 cases) ---
+  - input_emoji: "🙃🔫"
+    acceptable_interpretations:
+      - "This is fine"
+      - "Everything is terrible but pretending it's okay"
+      - "Sarcastically fine"
+    category: sarcasm
+
+  - input_emoji: "💀😂"
+    acceptable_interpretations:
+      - "I'm dead, that's so funny"
+      - "Dying of laughter"
+      - "Hilarious"
+    category: sarcasm
+
+  # --- abstract (2 cases) ---
+  - input_emoji: "🌍❤️🤝"
+    acceptable_interpretations:
+      - "World peace and love"
+      - "Global unity"
+      - "Together for a better world"
+    category: abstract
+
+  - input_emoji: "⏳💭🌅"
+    acceptable_interpretations:
+      - "Time flies, reflecting on the past"
+      - "Contemplating as time passes"
+      - "Memories of sunset moments"
+    category: abstract

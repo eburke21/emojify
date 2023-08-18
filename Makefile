@@ -17,4 +17,4 @@ build-index:
 	python data/scripts/build_index.py
 
 eval:
-	@echo "TODO: implement in Phase 5"
+	python tests/eval/run_eval.py
