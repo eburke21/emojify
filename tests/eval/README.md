@@ -1,8 +1,8 @@
-# emojify Evaluation Suite
+# 📊 emojify Evaluation Suite
 
-## Methodology
+## 🔬 Methodology
 
-### Dataset
+### 📋 Dataset
 
 50 manually curated test cases split across two pipelines:
 
@@ -17,7 +17,7 @@ The dataset includes deliberate hard cases:
 - **Ambiguous sequences:** 🏃✈️⏰ (running late? traveling to a race?)
 - **Abstract concepts:** ⏳💭🌅, 🌍❤️🤝
 
-### Scoring Rubric
+### 🎯 Scoring Rubric
 
 **Text to Emoji (`score_text_to_emoji`):**
 | Score | Criteria |
@@ -35,7 +35,7 @@ The dataset includes deliberate hard cases:
 
 The emoji-to-text scoring uses ada-002 embeddings of both the LLM-generated interpretation and each acceptable answer, taking the maximum cosine similarity across all acceptable strings.
 
-### Running the Evaluation
+### 🏃 Running the Evaluation
 
 ```bash
 export OPENAI_API_KEY='your-key-here'
@@ -48,40 +48,40 @@ Results are saved to `results/eval_run.json`.
 
 ---
 
-## Results
+## 📈 Results
 
 > Update this section after running `make eval`.
 
-### Overall
+### 🏆 Overall
 
 - Average score: _TBD_ / 3.00
 - Target (>= 2.3): _TBD_
 - Distribution: 3=_TBD_ | 2=_TBD_ | 1=_TBD_
 
-### Per-Category Breakdown
+### 📊 Per-Category Breakdown
 
 _Insert table from eval output._
 
 ---
 
-## Failure Mode Analysis
+## 🔍 Failure Mode Analysis
 
 > Update this section after reviewing worst cases from eval output.
 
-### Expected Patterns (from spec)
+### 🔮 Expected Patterns (from spec)
 
 1. **Concrete nouns score highest** — food, animals, weather should average 2.7+. ada-002 embeddings are excellent at mapping "pizza" near the pizza emoji.
 2. **Abstract emotions are harder** — sarcasm, nuance should average ~2.0. "That meeting was brutal" maps well to 😤 but misses the sarcasm layer.
 3. **Compound sequences are the hardest** — multi-emoji narrative ordering is ambiguous. 🏃✈️⏰ could be "running late for a flight" or "traveling to a race."
 4. **The diversity filter matters** — without it, "I'm so happy" returns 😀😃😄😁😊 (five nearly identical smiling faces). With diversity filtering, it returns 😊🎉✨.
 
-### Observed Patterns
+### 👀 Observed Patterns
 
 _Update after running eval._
 
 ---
 
-## What Would Improve Results
+## 🚀 What Would Improve Results
 
 1. **Enriched descriptions** — Add usage context to emoji descriptions ("often used sarcastically", "commonly paired with 💀 for humor"). The description template is simple; richer descriptions would give the embedding model more semantic signal.
 2. **Fine-tuned embeddings** — A model trained specifically on emoji-text pairs rather than general text would capture emoji-specific semantics better.
@@ -90,7 +90,7 @@ _Update after running eval._
 
 ---
 
-## Lessons Learned
+## 💡 Lessons Learned
 
 1. **"Embedding quality depends more on what you embed than which model you use."** Generated descriptions significantly outperform raw keywords for embedding quality.
 2. **"Not everything needs a vector database."** At 1,800 vectors, brute-force numpy cosine similarity takes <5ms.
