@@ -111,9 +111,9 @@ class TestTextToEmoji:
 
         assert isinstance(result, str)
         assert len(result) >= 1  # At least 1 emoji character
-        # Every character should be a high Unicode character (emoji range)
+        # Every non-space character should be a high Unicode character (emoji range)
         for char in result:
-            assert ord(char) > 127
+            assert ord(char) > 127 or char == " "
 
     @patch("emojify.text_to_emoji.get_embedding")
     def test_suggest_count(self, mock_embed):
@@ -122,5 +122,5 @@ class TestTextToEmoji:
 
         result = suggest("test", self.index, count=4)
 
-        # Each emoji in our test set is a single char
-        assert len(result) == 4
+        # Space-separated emoji, so split to count
+        assert len(result.split()) == 4

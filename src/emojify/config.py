@@ -4,6 +4,10 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 EMBEDDING_MODEL = "text-embedding-ada-002"
 DECODE_MODEL = "gpt-3.5-turbo"
 

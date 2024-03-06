@@ -188,7 +188,7 @@ class TestSuggestCommand:
         # Output should be emoji characters (high Unicode)
         assert len(output) >= 1
         for char in output:
-            assert ord(char) > 127
+            assert ord(char) > 127 or char == " "
 
 
 class TestDecodeCommand:
@@ -216,11 +216,13 @@ class TestDecodeCommand:
         assert "Individual meanings" in result.output
 
     @patch("emojify.cli._validate_startup")
-    @patch("emojify.decoder.openai.ChatCompletion.create")
+    @patch("openai.OpenAI")
     @patch("emojify.decoder.get_openai_api_key", return_value="fake-key")
-    def test_decode_with_llm(self, mock_key, mock_chat, mock_validate):
+    def test_decode_with_llm(self, mock_key, mock_openai_cls, mock_validate):
         """decode command shows both individual meanings and combined interpretation."""
-        mock_chat.return_value = MagicMock(
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.chat.completions.create.return_value = MagicMock(
             choices=[MagicMock(message=MagicMock(content="Test interpretation"))]
         )
 

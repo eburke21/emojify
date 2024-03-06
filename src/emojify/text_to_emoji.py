@@ -53,4 +53,4 @@ def suggest(query: str, index: EmojiIndex, count: int = 5) -> str:
         diverse=True,
         target_count=count,
     )
-    return "".join(m.emoji for m in matches)
+    return " ".join(m.emoji for m in matches)

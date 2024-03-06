@@ -1,5 +1,7 @@
 """Tests for the embedding API wrapper and SQLite cache."""
 
+import io
+import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -23,27 +25,31 @@ def _make_fake_embedding(dim: int = EMBEDDING_DIM) -> list[float]:
     return rng.randn(dim).tolist()
 
 
-def _mock_single_response(embedding: list[float]) -> dict:
-    """Build a fake OpenAI Embedding.create response for a single text."""
-    return {"data": [{"embedding": embedding, "index": 0}]}
+def _mock_batch_response(embeddings: list[list[float]]):
+    """Build a fake openai v1 embeddings.create response for a batch."""
+    data = []
+    for i, emb in enumerate(embeddings):
+        item = MagicMock()
+        item.embedding = emb
+        item.index = i
+        data.append(item)
+    response = MagicMock()
+    response.data = data
+    return response
 
 
-def _mock_batch_response(embeddings: list[list[float]]) -> dict:
-    """Build a fake OpenAI Embedding.create response for a batch."""
-    return {
-        "data": [
-            {"embedding": emb, "index": i}
-            for i, emb in enumerate(embeddings)
-        ]
-    }
-
-
-@patch("emojify.embeddings.openai.Embedding.create")
-@patch("emojify.embeddings._ensure_api_key")
-def test_single_embedding(mock_key, mock_create):
-    """get_embedding returns a numpy array of shape (1536,)."""
+@patch("emojify.embeddings.get_openai_api_key", return_value="fake-key")
+@patch("emojify.embeddings.urllib.request.urlopen")
+def test_single_embedding(mock_urlopen, mock_key):
+    """_call_embedding_api returns a numpy array of shape (1536,)."""
     fake = _make_fake_embedding()
-    mock_create.return_value = _mock_single_response(fake)
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps(
+        {"data": [{"embedding": fake, "index": 0}]}
+    ).encode()
+    mock_resp.__enter__ = lambda s: s
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    mock_urlopen.return_value = mock_resp
 
     from emojify.embeddings import disable_cache
     disable_cache()
@@ -57,14 +63,15 @@ def test_single_embedding(mock_key, mock_create):
     enable_cache()
 
 
-@patch("emojify.embeddings.openai.Embedding.create")
-@patch("emojify.embeddings._ensure_api_key")
-def test_batch_embedding(mock_key, mock_create):
+@patch("emojify.embeddings._make_client")
+def test_batch_embedding(mock_make_client):
     """get_embeddings_batch returns shape (N, 1536) for N texts."""
     rng = np.random.RandomState(123)
     n = 5
     fakes = [rng.randn(EMBEDDING_DIM).tolist() for _ in range(n)]
-    mock_create.return_value = _mock_batch_response(fakes)
+    mock_client = MagicMock()
+    mock_client.embeddings.create.return_value = _mock_batch_response(fakes)
+    mock_make_client.return_value = mock_client
 
     texts = [f"text {i}" for i in range(n)]
     result = get_embeddings_batch(texts, batch_size=10, show_progress=False)

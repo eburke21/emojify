@@ -8,11 +8,22 @@ import time
 import click
 from rich.console import Console
 from rich.table import Table
-from rich.text import Text
 
 from emojify import __version__
 
 console = Console()
+
+
+def _status(msg: str) -> None:
+    """Print a status message to stderr, overwriting the line when done."""
+    if sys.stderr.isatty():
+        print(f"\033[36m{msg}\033[0m", end="\r", file=sys.stderr, flush=True)
+
+
+def _clear_status() -> None:
+    """Clear the status line on stderr."""
+    if sys.stderr.isatty():
+        print(" " * 40, end="\r", file=sys.stderr, flush=True)
 
 # Emoji detection regex — used by interactive mode to auto-detect input type
 _EMOJI_CHARS_RE = re.compile(
@@ -102,8 +113,11 @@ def text(ctx, query, top_k, no_diversity, verbose):
 
     t0 = time.time()
     try:
+        _status("Finding emoji...")
         results = text_to_emoji(query, index, top_k=top_k)
+        _clear_status()
     except Exception as e:
+        _clear_status()
         console.print(f"[bold red]Error:[/bold red] {e}")
         sys.exit(1)
     search_time = time.time() - t0
@@ -131,7 +145,7 @@ def text(ctx, query, top_k, no_diversity, verbose):
         diverse_results = text_to_emoji(
             query, index, top_k=top_k * 2, diverse=True, target_count=3,
         )
-        sequence = "".join(r.emoji for r in diverse_results)
+        sequence = " ".join(r.emoji for r in diverse_results)
         console.print(f"\nSuggested sequence: [bold]{sequence}[/bold]")
 
     if verbose:
@@ -157,8 +171,11 @@ def suggest(ctx, query, count, verbose):
 
     t0 = time.time()
     try:
+        _status("Finding emoji...")
         result = suggest_fn(query, index, count=count)
+        _clear_status()
     except Exception as e:
+        _clear_status()
         console.print(f"[bold red]Error:[/bold red] {e}")
         sys.exit(1)
     elapsed = time.time() - t0
@@ -186,8 +203,11 @@ def decode(ctx, emoji_string, no_llm, verbose):
 
     t0 = time.time()
     try:
+        _status("Decoding emoji...")
         result = decode_emoji(emoji_string, index, use_llm=not no_llm)
+        _clear_status()
     except Exception as e:
+        _clear_status()
         console.print(f"[bold red]Error:[/bold red] {e}")
         sys.exit(1)
     elapsed = time.time() - t0
@@ -254,7 +274,9 @@ def interactive(ctx, verbose):
         try:
             if _is_emoji_input(user_input):
                 # Decode mode
+                _status("Decoding...")
                 result = decode_emoji(user_input, index, use_llm=True)
+                _clear_status()
                 if result.combined_interpretation:
                     console.print(
                         f"[green]\"{result.combined_interpretation}\"[/green]\n"
@@ -265,7 +287,9 @@ def interactive(ctx, verbose):
                     console.print()
             else:
                 # Suggest mode
+                _status("Finding emoji...")
                 emoji_str = suggest_fn(user_input, index, count=5)
+                _clear_status()
                 console.print(f"{emoji_str}\n")
         except Exception as e:
             console.print(f"[bold red]Error:[/bold red] {e}\n")

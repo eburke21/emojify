@@ -10,8 +10,6 @@ Two-stage pipeline:
 import re
 from dataclasses import dataclass, field
 
-import openai
-
 from emojify.config import DECODE_MODEL, get_openai_api_key
 from emojify.index import EmojiIndex
 
@@ -190,12 +188,16 @@ def decode_emoji(
 
     # --- Stage 2: LLM interpretation ---
     if use_llm and individual:
+        import httpx
+        from openai import OpenAI
+
         prompt = _build_prompt(individual)
 
-        if not openai.api_key:
-            openai.api_key = get_openai_api_key()
-
-        response = openai.ChatCompletion.create(
+        client = OpenAI(
+            api_key=get_openai_api_key(),
+            timeout=httpx.Timeout(30.0, connect=5.0),
+        )
+        response = client.chat.completions.create(
             model=DECODE_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100,

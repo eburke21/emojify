@@ -165,38 +165,42 @@ class TestStage2LLM:
     def setup_method(self):
         self.index = _create_test_index()
 
-    @patch("emojify.decoder.openai.ChatCompletion.create")
+    @patch("openai.OpenAI")
     @patch("emojify.decoder.get_openai_api_key", return_value="fake-key")
-    def test_llm_call_made(self, mock_key, mock_chat):
+    def test_llm_call_made(self, mock_key, mock_openai_cls):
         """Stage 2 calls GPT-3.5 Turbo and returns the interpretation."""
-        mock_chat.return_value = MagicMock(
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.chat.completions.create.return_value = MagicMock(
             choices=[MagicMock(message=MagicMock(content="Pizza and beer night!"))]
         )
 
         result = decode_emoji("🍕🍺", self.index, use_llm=True)
 
         assert result.combined_interpretation == "Pizza and beer night!"
-        mock_chat.assert_called_once()
+        mock_client.chat.completions.create.assert_called_once()
 
         # Verify the prompt contains the emoji descriptions
-        call_args = mock_chat.call_args
-        messages = call_args[1]["messages"] if "messages" in call_args[1] else call_args[0][0]
+        call_args = mock_client.chat.completions.create.call_args
+        messages = call_args[1]["messages"]
         prompt = messages[0]["content"]
         assert "🍕" in prompt
         assert "🍺" in prompt
         assert "pizza" in prompt
 
-    @patch("emojify.decoder.openai.ChatCompletion.create")
+    @patch("openai.OpenAI")
     @patch("emojify.decoder.get_openai_api_key", return_value="fake-key")
-    def test_prompt_format(self, mock_key, mock_chat):
+    def test_prompt_format(self, mock_key, mock_openai_cls):
         """The prompt is correctly constructed from emoji descriptions."""
-        mock_chat.return_value = MagicMock(
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.chat.completions.create.return_value = MagicMock(
             choices=[MagicMock(message=MagicMock(content="test response"))]
         )
 
         decode_emoji("🎉🎂", self.index, use_llm=True)
 
-        call_args = mock_chat.call_args
+        call_args = mock_client.chat.completions.create.call_args
         messages = call_args[1]["messages"]
         prompt = messages[0]["content"]
 
@@ -205,17 +209,19 @@ class TestStage2LLM:
         assert "birthday cake" in prompt
         assert "single, natural sentence" in prompt
 
-    @patch("emojify.decoder.openai.ChatCompletion.create")
+    @patch("openai.OpenAI")
     @patch("emojify.decoder.get_openai_api_key", return_value="fake-key")
-    def test_model_parameters(self, mock_key, mock_chat):
+    def test_model_parameters(self, mock_key, mock_openai_cls):
         """Verify GPT-3.5 Turbo is called with correct parameters."""
-        mock_chat.return_value = MagicMock(
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.chat.completions.create.return_value = MagicMock(
             choices=[MagicMock(message=MagicMock(content="response"))]
         )
 
         decode_emoji("🍕", self.index, use_llm=True)
 
-        call_args = mock_chat.call_args[1]
+        call_args = mock_client.chat.completions.create.call_args[1]
         assert call_args["model"] == "gpt-3.5-turbo"
         assert call_args["max_tokens"] == 100
         assert call_args["temperature"] == 0.3

@@ -1,22 +1,29 @@
 """Embedding API calls, batching, and SQLite caching."""
 
+from __future__ import annotations
+
+import json
 import sqlite3
 import time
+import urllib.request
 from pathlib import Path
 
 import numpy as np
-import openai
-from rich.progress import Progress
 
 from emojify.config import EMBEDDING_MODEL, CACHE_PATH, get_openai_api_key
 
 EMBEDDING_DIM = 1536
+API_TIMEOUT = 15  # seconds
+
+_OPENAI_EMBED_URL = "https://api.openai.com/v1/embeddings"
 
 
-def _ensure_api_key() -> None:
-    """Set the OpenAI API key if not already configured."""
-    if not openai.api_key:
-        openai.api_key = get_openai_api_key()
+def _make_client() -> OpenAI:
+    """Create a new OpenAI client (used for batch calls only)."""
+    return OpenAI(
+        api_key=get_openai_api_key(),
+        timeout=httpx.Timeout(60.0, connect=10.0),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -86,19 +93,39 @@ def enable_cache(db_path: Path = CACHE_PATH) -> None:
 # ---------------------------------------------------------------------------
 
 def _call_embedding_api(text: str) -> np.ndarray:
-    """Call OpenAI embedding API for a single text. No caching."""
-    _ensure_api_key()
-    response = openai.Embedding.create(input=text, model=EMBEDDING_MODEL)
-    return np.array(response["data"][0]["embedding"], dtype=np.float64)
+    """Call OpenAI embedding API for a single text using urllib.
+
+    Bypasses httpx/openai SDK to avoid hanging on some systems.
+    Uses a reliable socket-level timeout via urllib.
+    """
+    api_key = get_openai_api_key()
+    payload = json.dumps({"input": text, "model": EMBEDDING_MODEL}).encode()
+    req = urllib.request.Request(
+        _OPENAI_EMBED_URL,
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=API_TIMEOUT) as resp:
+            body = json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode() if e.fp else ""
+        raise RuntimeError(f"OpenAI API error {e.code}: {error_body}") from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Could not reach OpenAI API: {e.reason}") from e
+
+    return np.array(body["data"][0]["embedding"], dtype=np.float64)
 
 
 def _call_embedding_api_batch(texts: list[str]) -> np.ndarray:
     """Call OpenAI embedding API for a batch of texts. No caching."""
-    _ensure_api_key()
-    response = openai.Embedding.create(input=texts, model=EMBEDDING_MODEL)
-    # Response data may not be in order — sort by index
-    sorted_data = sorted(response["data"], key=lambda x: x["index"])
-    return np.array([d["embedding"] for d in sorted_data], dtype=np.float64)
+    client = _make_client()
+    response = client.embeddings.create(input=texts, model=EMBEDDING_MODEL)
+    sorted_data = sorted(response.data, key=lambda x: x.index)
+    return np.array([d.embedding for d in sorted_data], dtype=np.float64)
 
 
 def get_embedding(text: str, use_cache: bool = True) -> np.ndarray:
@@ -126,7 +153,6 @@ def get_embeddings_batch(
 
     Returns array of shape (len(texts), 1536).
     """
-    _ensure_api_key()
     all_embeddings = np.zeros((len(texts), EMBEDDING_DIM), dtype=np.float64)
 
     batches = [
@@ -147,14 +173,14 @@ def get_embeddings_batch(
                     batch_result = _call_embedding_api_batch(batch)
                     all_embeddings[offset : offset + len(batch)] = batch_result
                     break
-                except openai.error.RateLimitError:
+                except RateLimitError:
                     wait = 2 ** (attempt + 1)
                     if progress_ctx:
                         progress_ctx.console.print(
                             f"[yellow]Rate limited. Waiting {wait}s...[/yellow]"
                         )
                     time.sleep(wait)
-                except openai.error.APIError as e:
+                except APIError as e:
                     if attempt < max_retries - 1:
                         time.sleep(2)
                     else:
