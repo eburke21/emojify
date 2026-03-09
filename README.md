@@ -2,7 +2,11 @@
 
 Bidirectional emoji-text translator powered by embedding-based semantic search. Type a sentence, get the perfect emoji sequence. Paste emoji, get the intended message back.
 
-The core idea: embed both `"I'm so happy right now"` and the description of 😄 (`"grinning face with smiling eyes — happiness, joy, amusement"`) into the same vector space using OpenAI's `text-embedding-ada-002`. Their vectors land close together. That geometric proximity *is* the mapping — no fine-tuning, no classification head, no prompt engineering.
+add gifs from assets
+![emojify-suggest](assets/emojify-suggest.gif)
+![emojify-decode](assets/emojify-decode.gif)
+
+The core idea: embed both `"I'm so happy right now"` and the description of 😄 (`"grinning face with smiling eyes — happiness, joy, amusement"`) into the same vector space using OpenAI's `text-embedding-ada-002`. Their vectors land close together. That geometric proximity _is_ the mapping — no fine-tuning, no classification head, no prompt engineering.
 
 ```
 $ emojify suggest "just deployed to production at 2am"
@@ -127,16 +131,16 @@ Goodbye! 👋
 
 ## Tech Stack
 
-| Layer | Technology | Why |
-|---|---|---|
-| CLI framework | Click | Clean subcommand routing, context passing, testable with `CliRunner` |
-| Terminal output | Rich | Colored tables, styled text, progress bars |
-| Embeddings | text-embedding-ada-002 | Best cost/quality ratio for semantic similarity |
-| LLM (decode) | GPT-3.5 Turbo | Fast, cheap, constrained single-sentence generation |
-| Vector math | NumPy | Cosine similarity at this scale doesn't need a vector DB |
-| Caching | SQLite (stdlib) | Zero-dependency query embedding cache |
-| Data sources | Unicode CLDR + Emojilib | Canonical names + community keywords for ~1,800 emoji |
-| Testing | pytest + pytest-mock | 76 unit tests, all API calls mocked |
+| Layer           | Technology              | Why                                                                  |
+| --------------- | ----------------------- | -------------------------------------------------------------------- |
+| CLI framework   | Click                   | Clean subcommand routing, context passing, testable with `CliRunner` |
+| Terminal output | Rich                    | Colored tables, styled text, progress bars                           |
+| Embeddings      | text-embedding-ada-002  | Best cost/quality ratio for semantic similarity                      |
+| LLM (decode)    | GPT-3.5 Turbo           | Fast, cheap, constrained single-sentence generation                  |
+| Vector math     | NumPy                   | Cosine similarity at this scale doesn't need a vector DB             |
+| Caching         | SQLite (stdlib)         | Zero-dependency query embedding cache                                |
+| Data sources    | Unicode CLDR + Emojilib | Canonical names + community keywords for ~1,800 emoji                |
+| Testing         | pytest + pytest-mock    | 76 unit tests, all API calls mocked                                  |
 
 ## Project Structure
 
