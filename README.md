@@ -2,8 +2,8 @@
 
 Bidirectional emoji-text translator powered by embedding-based semantic search. Type a sentence, get the perfect emoji sequence. Paste emoji, get the intended message back.
 
-add gifs from assets
 ![emojify-suggest](assets/emojify-suggest.gif)
+
 ![emojify-decode](assets/emojify-decode.gif)
 
 The core idea: embed both `"I'm so happy right now"` and the description of 😄 (`"grinning face with smiling eyes — happiness, joy, amusement"`) into the same vector space using OpenAI's `text-embedding-ada-002`. Their vectors land close together. That geometric proximity _is_ the mapping — no fine-tuning, no classification head, no prompt engineering.
