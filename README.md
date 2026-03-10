@@ -82,37 +82,32 @@ Goodbye! 👋
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     Text → Emoji                        │
-│                                                         │
-│  query ──→ ada-002 ──→ cosine similarity ──→ rank       │
-│                         vs 1,800 emoji                  │
-│                         embeddings                      │
-│                              │                          │
-│                     diversity filter                    │
-│                   (1 per Unicode category)              │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph text_to_emoji["<b>Text → Emoji</b>"]
+        A["'just deployed to production at 2am'"] --> B["ada-002 embedding"]
+        B --> C["cosine similarity\nvs 1,800 emoji embeddings"]
+        C --> D["diversity filter\n(1 per Unicode category)"]
+        D --> E["🚀 💻 🌙 😴 ⚡"]
+    end
 
-┌─────────────────────────────────────────────────────────┐
-│                     Emoji → Text                        │
-│                                                         │
-│  emoji string ──→ parse (ZWJ, flags, skin tones)        │
-│       │                                                 │
-│       ├──→ metadata lookup (deterministic)              │
-│       │         │                                       │
-│       └──→ GPT-3.5 Turbo (interpretation)               │
-└─────────────────────────────────────────────────────────┘
+    subgraph emoji_to_text["<b>Emoji → Text</b>"]
+        F["🍕🍺📺🏈"] --> G["parse emoji\n(ZWJ, flags, skin tones)"]
+        G --> H["metadata lookup\n(deterministic)"]
+        H --> I["GPT-3.5 Turbo\ninterpretation"]
+        I --> J["'Watching football\nwith pizza and beer.'"]
+    end
 
-┌─────────────────────────────────────────────────────────┐
-│                    Data Pipeline                        │
-│                                                         │
-│  Unicode CLDR ─┬─→ merge ──→ descriptions ──→ embed     │
-│  Emojilib ─────┘              (ada-002)       (~$0.02)  │
-│                                    │                    │
-│                              emoji_index.npz            │
-│                              emoji_metadata.json        │
-└─────────────────────────────────────────────────────────┘
+    subgraph data_pipeline["<b>Data Pipeline (build-time)</b>"]
+        K["Unicode CLDR\n(en.xml)"] --> M["merge &\ndeduplicate"]
+        L["Emojilib\n(emojilib.json)"] --> M
+        M --> N["generate\ndescriptions"]
+        N --> O["embed via\nada-002 (~$0.02)"]
+        O --> P["emoji_index.npz\nemoji_metadata.json"]
+    end
+
+    P -.->|"loaded at runtime"| C
+    P -.->|"loaded at runtime"| H
 ```
 
 ## Design Decisions
