@@ -2,9 +2,7 @@
 
 Bidirectional emoji-text translator powered by embedding-based semantic search. Type a sentence, get the perfect emoji sequence. Paste emoji, get the intended message back.
 
-![emojify-suggest](assets/emojify-suggest.gif)
-
-![emojify-decode](assets/emojify-decode.gif)
+![emojify-demo](assets/emojify-demo.gif)
 
 The core idea: embed both `"I'm so happy right now"` and the description of 😄 (`"grinning face with smiling eyes — happiness, joy, amusement"`) into the same vector space using OpenAI's `text-embedding-ada-002`. Their vectors land close together. That geometric proximity _is_ the mapping — no fine-tuning, no classification head, no prompt engineering.
 
@@ -25,15 +23,22 @@ Individual meanings:
 Combined interpretation: "Watching football with pizza and beer."
 ```
 
-## How It Works
+## 📦 Setup
 
-**Text → Emoji:** Your query is embedded via ada-002, then ranked against ~1,800 precomputed emoji description embeddings using cosine similarity. A diversity filter enforces category variety so you don't get five near-identical smiley faces.
+```bash
+git clone https://github.com/erinburke/emojify.git
+cd emojify
+pip install -e ".[dev]"
 
-**Emoji → Text:** Each emoji is parsed (handling ZWJ sequences, flags, skin-tone modifiers) and looked up in a metadata index. The descriptions are sent to GPT-3.5 Turbo, which generates a single natural-language interpretation.
+export OPENAI_API_KEY='your-key-here'
 
-**Data pipeline:** Unicode CLDR annotations + Emojilib community keywords are merged, deduplicated, and augmented into rich descriptions, then batch-embedded into a `.npz` index (~14MB, loads in <100ms).
+make fetch-data        # Download Unicode CLDR + Emojilib source data
+make build-metadata    # Merge sources, generate descriptions
+make build-index       # Embed all descriptions via ada-002 (~$0.02)
+make test              # Run 76 unit tests
+```
 
-## Usage
+## 🚀 Usage
 
 ```bash
 # Ranked results with similarity scores
@@ -86,29 +91,37 @@ Goodbye! 👋
 graph TD
     subgraph text_to_emoji["<b>Text → Emoji</b>"]
         A["'just deployed to production at 2am'"] --> B["ada-002 embedding"]
-        B --> C["cosine similarity\nvs 1,800 emoji embeddings"]
-        C --> D["diversity filter\n(1 per Unicode category)"]
+        B --> C["cosine similarity <br> vs 1,800 emoji embeddings"]
+        C --> D["diversity filter <br> (1 per Unicode category)"]
         D --> E["🚀 💻 🌙 😴 ⚡"]
     end
 
     subgraph emoji_to_text["<b>Emoji → Text</b>"]
-        F["🍕🍺📺🏈"] --> G["parse emoji\n(ZWJ, flags, skin tones)"]
-        G --> H["metadata lookup\n(deterministic)"]
-        H --> I["GPT-3.5 Turbo\ninterpretation"]
-        I --> J["'Watching football\nwith pizza and beer.'"]
+        F["🍕🍺📺🏈"] --> G["parse emoji <br> (ZWJ, flags, skin tones)"]
+        G --> H["metadata lookup <br> (deterministic)"]
+        H --> I["GPT-3.5 Turbo <br> interpretation"]
+        I --> J["'Watching football <br> with pizza and beer.'"]
     end
 
     subgraph data_pipeline["<b>Data Pipeline (build-time)</b>"]
-        K["Unicode CLDR\n(en.xml)"] --> M["merge &\ndeduplicate"]
-        L["Emojilib\n(emojilib.json)"] --> M
-        M --> N["generate\ndescriptions"]
-        N --> O["embed via\nada-002 (~$0.02)"]
-        O --> P["emoji_index.npz\nemoji_metadata.json"]
+        K["Unicode CLDR <br> (en.xml)"] --> M["merge & <br> deduplicate"]
+        L["Emojilib <br> (emojilib.json)"] --> M
+        M --> N["generate <br> descriptions"]
+        N --> O["embed via <br> ada-002 (~$0.02)"]
+        O --> P["emoji_index.npz <br> emoji_metadata.json"]
     end
 
     P -.->|"loaded at runtime"| C
     P -.->|"loaded at runtime"| H
 ```
+
+## Date Pipeline
+
+Unicode CLDR annotations + Emojilib community keywords are merged, deduplicated, and augmented into rich descriptions, then batch-embedded into a `.npz` index (~14MB, loads in <100ms).
+
+**Text → Emoji:** Your query is embedded via ada-002, then ranked against ~1,800 precomputed emoji description embeddings using cosine similarity. A diversity filter enforces category variety so you don't get five near-identical smiley faces.
+
+**Emoji → Text:** Each emoji is parsed (handling ZWJ sequences, flags, skin-tone modifiers) and looked up in a metadata index. The descriptions are sent to GPT-3.5 Turbo, which generates a single natural-language interpretation.
 
 ## Design Decisions
 
@@ -124,7 +137,7 @@ graph TD
 
 **Two-pass diversity filter.** Pass 1 enforces a strict limit of 1 emoji per Unicode category. If that yields fewer results than requested (e.g., querying "sushi" returns mostly Food & Drink), Pass 2 relaxes the constraint and backfills from the next-best matches.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 | Layer           | Technology              | Why                                                                  |
 | --------------- | ----------------------- | -------------------------------------------------------------------- |
@@ -137,39 +150,24 @@ graph TD
 | Data sources    | Unicode CLDR + Emojilib | Canonical names + community keywords for ~1,800 emoji                |
 | Testing         | pytest + pytest-mock    | 76 unit tests, all API calls mocked                                  |
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 src/emojify/
-├── cli.py               # Click CLI (text, suggest, decode, interactive, version)
-├── text_to_emoji.py      # Embed query → cosine search → diversity filter
-├── decoder.py            # Parse emoji → metadata lookup → GPT-3.5 interpretation
-├── diversity.py          # Category-based deduplication (two-pass algorithm)
-├── embeddings.py         # OpenAI embedding API calls + SQLite cache
-├── index.py              # EmojiIndex: load .npz, cosine similarity search
-├── eval.py               # Scoring functions for evaluation suite
-└── config.py             # Model constants, data paths, API key loading
+├── cli.py               # 🖥️  Click CLI (text, suggest, decode, interactive, version)
+├── text_to_emoji.py      # 🔍  Embed query → cosine search → diversity filter
+├── decoder.py            # 🔓  Parse emoji → metadata lookup → GPT-3.5 interpretation
+├── diversity.py          # 🌈  Category-based deduplication (two-pass algorithm)
+├── embeddings.py         # 🧠  OpenAI embedding API calls + SQLite cache
+├── index.py              # 📦  EmojiIndex: load .npz, cosine similarity search
+├── eval.py               # 📊  Scoring functions for evaluation suite
+└── config.py             # ⚙️   Model constants, data paths, API key loading
 
-data/scripts/             # Four-stage pipeline (fetch → merge → describe → embed)
-tests/                    # 76 unit tests + 50-case evaluation suite
+data/scripts/             # 🔧  Four-stage pipeline (fetch → merge → describe → embed)
+tests/                    # ✅  76 unit tests + 50-case evaluation suite
 ```
 
-## Setup
-
-```bash
-git clone https://github.com/erinburke/emojify.git
-cd emojify
-pip install -e ".[dev]"
-
-export OPENAI_API_KEY='your-key-here'
-
-make fetch-data        # Download Unicode CLDR + Emojilib source data
-make build-metadata    # Merge sources, generate descriptions
-make build-index       # Embed all descriptions via ada-002 (~$0.02)
-make test              # Run 76 unit tests
-```
-
-## Evaluation
+## 📊 Evaluation
 
 A 50-case test suite scores both pipelines on a 1–3 scale:
 
